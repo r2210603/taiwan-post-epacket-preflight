@@ -1,0 +1,10 @@
+# Initial candidate allowlist. Review additions before extending this list.
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/preflight.py
+!/test_preflight.py
+!/examples/
+/examples/*
+!/examples/batch.json

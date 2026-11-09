@@ -1,0 +1,18 @@
+{
+  "parcels": [
+    {
+      "weightKg": 0.5,
+      "lengthCm": 20,
+      "widthCm": 12,
+      "heightCm": 5,
+      "items": [
+        {
+          "name": "Synthetic paper notebook",
+          "quantity": 2,
+          "weightKg": 0.3,
+          "unitPrice": 4.5
+        }
+      ]
+    }
+  ]
+}
