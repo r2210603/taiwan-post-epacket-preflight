@@ -1,0 +1,14 @@
+{
+  "name": "ctg-epacket",
+  "owner": {
+    "name": "CTG"
+  },
+  "description": "Install the Taiwan Post ePacket preflight plugin from CTG.",
+  "plugins": [
+    {
+      "name": "epacket",
+      "source": "./",
+      "description": "Offline field checks for Taiwan Post international ePacket batch JSON."
+    }
+  ]
+}

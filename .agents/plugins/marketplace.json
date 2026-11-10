@@ -1,0 +1,20 @@
+{
+  "name": "ctg-epacket",
+  "interface": {
+    "displayName": "CTG ePacket"
+  },
+  "plugins": [
+    {
+      "name": "epacket",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

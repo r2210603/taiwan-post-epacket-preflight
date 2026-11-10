@@ -5,8 +5,8 @@ description: "預檢臺灣國際 e 小包（Taiwan Post ePacket）批次 JSON。
 
 # 國際 e 小包批次預檢
 
-1. 使用者若指定本機 JSON 檔案，只處理該檔案。相對輸入路徑以呼叫 Skill 時的工作目錄為準。使用者明確要試跑範例時，改用本 Skill 的 `assets/batch.json`。缺少檔案且未指定試跑時，詢問路徑。
-2. 以本份 `SKILL.md` 所在資料夾定位 `scripts/preflight.py` 和 `assets/batch.json`。執行前確認需要的檔案存在。以絕對路徑將腳本和輸入檔作為獨立引數傳入，並依所在 shell 安全引用路徑。確認所選直譯器的 `--version` 顯示 Python 3，再以 `python -I -B "<腳本路徑>" "<輸入路徑>"` 執行。也可用 `python3 -I -B`，Windows 的 Python Launcher 可用 `py -3 -I -B`。
+1. 使用者若指定本機 JSON 檔案，只處理該檔案。相對輸入路徑以呼叫 Skill 時的工作目錄為準。使用者明確要試跑範例時，使用下一步所列的內建範例。缺少檔案且未指定試跑時，詢問路徑。
+2. 以本份 `SKILL.md` 所在資料夾定位程式與範例。ZIP 安裝的檔案位於該資料夾內的 `scripts/preflight.py` 和 `assets/batch.json`。外掛安裝時，本檔位於 `<外掛根目錄>/skills/taiwan-post-epacket-preflight/`，使用該外掛根目錄下的 `preflight.py` 和 `examples/batch.json`。執行前確認需要的檔案存在。以絕對路徑將腳本和輸入檔作為獨立引數傳入，並依所在 shell 安全引用路徑。確認所選直譯器的 `--version` 顯示 Python 3，再以 `python -I -B "<腳本路徑>" "<輸入路徑>"` 執行。也可用 `python3 -I -B`，Windows 的 Python Launcher 可用 `py -3 -I -B`。
 3. 讓腳本讀取輸入。將回覆限於規則版本、狀態、問題代碼與欄位路徑，保留原始檔。依程式輸出解讀結果。
 
 | 退出碼 | 預檢結果 |

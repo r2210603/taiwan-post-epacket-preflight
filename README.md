@@ -23,9 +23,32 @@ python -B -m unittest -v
 
 此版範圍止於欄位預檢。目的地及幣別代碼、海關品名、禁限寄要求、試算表產檔與 EZPost 上傳驗證須另行處理。預檢通過無法證明郵局受理。
 
-## Codex 與 Claude Code Skill
+## 安裝 Codex 或 Claude Code 外掛
 
-在專案根目錄打包。打包程式把目前的驗證程式、合成範例、MIT 授權及 Skill 說明放進同一個 ZIP。請指定新的輸出檔名。
+使用 GitHub 作為外掛來源。預檢需要已安裝的 Python 3。
+
+**Codex CLI**（須支援 `codex plugin add`）
+
+```sh
+codex plugin marketplace add r2210603/taiwan-post-epacket-preflight
+codex plugin add epacket@ctg-epacket
+```
+
+開啟新會話，輸入「請用 ePacket 預檢 Skill 跑內建範例」，或輸入 `$` 並從清單選擇這個 Skill。
+
+**Claude Code**（CLI 2.1.292 或更新版本）
+
+```sh
+claude plugin install epacket --marketplace r2210603/taiwan-post-epacket-preflight
+```
+
+開啟新會話，執行 `/epacket:taiwan-post-epacket-preflight 用內建範例試跑`。合成範例應回傳 `warn` 和 `CCC_MISSING`。
+
+## ZIP 安裝
+
+從 [GitHub Releases](https://github.com/r2210603/taiwan-post-epacket-preflight/releases) 下載 `taiwan-post-epacket-preflight-skill.zip`。
+
+若要從原始碼打包，在專案根目錄執行以下命令，並指定新的輸出檔名。
 
 ```powershell
 python -I -B scripts/build_skill.py taiwan-post-epacket-preflight-skill.zip

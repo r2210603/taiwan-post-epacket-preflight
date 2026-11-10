@@ -3,6 +3,15 @@
 !/.gitignore
 !/README.md
 !/LICENSE
+!/.agents/
+/.agents/*
+!/.agents/plugins/
+/.agents/plugins/*
+!/.agents/plugins/marketplace.json
+!/.claude-plugin/
+/.claude-plugin/*
+!/.claude-plugin/marketplace.json
+!/.claude-plugin/plugin.json
 !/preflight.py
 !/test_preflight.py
 !/examples/
