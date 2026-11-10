@@ -8,3 +8,12 @@
 !/examples/
 /examples/*
 !/examples/batch.json
+!/scripts/
+/scripts/*
+!/scripts/build_skill.py
+!/skills/
+/skills/*
+!/skills/taiwan-post-epacket-preflight/
+/skills/taiwan-post-epacket-preflight/*
+!/skills/taiwan-post-epacket-preflight/SKILL.md
+!/test_build_skill.py

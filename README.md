@@ -23,6 +23,24 @@ python -B -m unittest -v
 
 此版範圍止於欄位預檢。目的地及幣別代碼、海關品名、禁限寄要求、試算表產檔與 EZPost 上傳驗證須另行處理。預檢通過無法證明郵局受理。
 
+## Codex 與 Claude Code Skill
+
+在專案根目錄打包。打包程式把目前的驗證程式、合成範例、MIT 授權及 Skill 說明放進同一個 ZIP。請指定新的輸出檔名。
+
+```powershell
+python -I -B scripts/build_skill.py taiwan-post-epacket-preflight-skill.zip
+```
+
+解壓後，把整個 `taiwan-post-epacket-preflight` 資料夾複製到對應位置。
+
+| 平台 | 專案內的 Skill 位置 | 叫用 |
+| --- | --- | --- |
+| [Codex](https://learn.chatgpt.com/docs/build-skills) | `.agents/skills/taiwan-post-epacket-preflight/` | `$taiwan-post-epacket-preflight` |
+| [Claude Code](https://code.claude.com/docs/en/skills) | `.claude/skills/taiwan-post-epacket-preflight/` | `/taiwan-post-epacket-preflight` |
+
+從安裝 Skill 的專案啟動新會話。可先輸入「請用合成範例試跑國際 e 小包預檢」。檢查自己的檔案時，提供本機 JSON 路徑。
+
+
 ## 授權
 
 本專案以 [MIT 授權](LICENSE) 發佈。
