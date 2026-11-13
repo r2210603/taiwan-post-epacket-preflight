@@ -7,7 +7,7 @@ import unittest
 from decimal import Decimal
 from pathlib import Path
 
-from preflight import MAX_INPUT_BYTES, MAX_MEASUREMENT_PLACES, RULESET, validate_batch
+from preflight import MAX_INPUT_BYTES, MAX_MEASUREMENT_PLACES, RULESET, RULESETS, validate_batch
 
 ROOT = Path(__file__).resolve().parent
 
@@ -109,6 +109,134 @@ class PreflightTests(unittest.TestCase):
                               ("123456789X", {"CCC_FORMAT"}), (1234567890, {"CCC_FORMAT"})):
             with self.subTest(ccc=ccc):
                 self.assertEqual(self.codes({"parcels": [parcel(items=[item(hsCode=ccc)])]}), expected)
+
+    def test_mail_type_selection_and_legacy_output(self):
+        old = {"parcels": [parcel(items=[item(hsCode=None, weightKg=1)])]}
+        explicit = {**old, "mailType": "epacket"}
+        expected = {"ruleset": RULESET, "status": "warn", "issues": [
+            {"path": "$.parcels[0].items[0].hsCode", "code": "CCC_MISSING", "level": "warn"}
+        ]}
+        self.assertEqual(self.run_cli(json.dumps(old).encode()).stdout, json.dumps(expected) + "\n")
+        self.assertEqual(self.run_cli(json.dumps(explicit).encode()).stdout, json.dumps(expected) + "\n")
+        old["parcels"][0]["mailType"] = "ems"
+        self.assertEqual(self.codes(old), {"CCC_MISSING"})
+        self.assertEqual(self.codes(explicit), {"CCC_MISSING", "MAIL_FIELD_SCOPE"})
+        misplaced = {"mailType": "ems", "destinationCountry": "JP",
+                     "parcels": [parcel(destinationCountry="JP")]}
+        self.assertEqual(validate_batch(misplaced),
+                         [{"path": "$.destinationCountry", "code": "MAIL_FIELD_SCOPE", "level": "fail"}])
+        for selector in (None, False, 1, [], {}, "", "EMS", " ems", "PRIVATE_SELECTOR"):
+            with self.subTest(selector=selector):
+                result = self.run_cli(json.dumps({**old, "mailType": selector}).encode())
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(json.loads(result.stdout)["issues"],
+                                 [{"path": "$.mailType", "code": "MAIL_TYPE", "level": "fail"}])
+                self.assertNotIn("PRIVATE_SELECTOR", result.stdout + result.stderr)
+
+    def test_international_service_limits_are_route_specific(self):
+        cases = (
+            ("ems", {"destinationCountry": "AU"}, 20, 105, 200),
+            ("ems", {"destinationCountry": "US"}, 30, 152, 274),
+            ("ems", {"destinationCountry": "DE"}, 30, 150, 300),
+            ("international-parcel", {"destinationCountry": "DE", "transport": "air"}, 30, 105, 200),
+            ("international-parcel", {"destinationCountry": "KR", "transport": "air"}, 20, 150, 300),
+            ("international-parcel", {"destinationCountry": "SG", "transport": "air"}, 30, 150, 300),
+            ("international-parcel", {"destinationCountry": "SG", "transport": "surface"}, 20, 150, 300),
+            ("international-parcel", {"destinationCountry": "CA", "transport": "surface"}, 20, 150, 300),
+            ("international-parcel", {"destinationCountry": "FR", "transport": "surface"}, 20, 150, 300),
+            ("international-parcel", {"destinationCountry": "PR", "transport": "sal"}, 20, 105, 200),
+        )
+        for service, route, weight, longest, total in cases:
+            with self.subTest(service=service, route=route):
+                width = (total - longest - 2) // 2
+                height = Decimal(total - longest) / 2 - width
+                package = parcel(**route, weightKg=weight, lengthCm=height,
+                                 widthCm=longest, heightCm=width)
+                batch = {"mailType": service, "parcels": [package]}
+                self.assertEqual(self.codes(batch), set())
+                self.assertEqual(self.codes({**batch, "parcels": [
+                    {**package, "weightKg": Decimal(weight) + Decimal("0.001"),
+                     "lengthCm": height + Decimal("0.001")}
+                ]}), {"PARCEL_WEIGHT", "DIMENSION_LIMITS"})
+                self.assertEqual(self.codes({**batch, "parcels": [
+                    {**package, "widthCm": Decimal(longest) + Decimal("0.001"), "heightCm": 10}
+                ]}), {"DIMENSION_LIMITS"})
+
+    def test_unknown_and_invalid_routes(self):
+        shipment = parcel(destinationCountry="JP", transport="sal", weightKg=80,
+                          lengthCm=300, items=[item(hsCode=None)])
+        batch = {"mailType": "international-parcel", "parcels": [shipment]}
+        self.assertEqual(self.codes(batch), {"ROUTE_LIMITS_UNCHECKED"})
+        shipment["items"] = [item(weightKg=81)]
+        self.assertEqual(self.codes(batch), {"ROUTE_LIMITS_UNCHECKED", "ITEM_WEIGHT_TOTAL"})
+        shipment.update(destinationCountry="jp", transport=[])
+        self.assertEqual(self.codes(batch), {"DESTINATION_COUNTRY", "TRANSPORT", "ITEM_WEIGHT_TOTAL"})
+        shipment.update(transport="air", items=[item()])
+        for country in ("TW", "CN", "UK", "EU", "XX", "ZZ"):
+            with self.subTest(country=country):
+                shipment["destinationCountry"] = country
+                expected = "DESTINATION_OUT_OF_SCOPE" if country in ("TW", "CN") else "DESTINATION_COUNTRY"
+                self.assertEqual(self.codes(batch), {expected})
+        shipment.update(destinationCountry="JP", transport="sal", weightKg=Decimal("1e9999999"))
+        self.assertEqual(self.codes(batch), {"ROUTE_LIMITS_UNCHECKED", "ITEM_WEIGHT_TOTAL_UNCHECKED"})
+
+    def test_parcel_minimum_without_route_limits(self):
+        shipment = parcel(destinationCountry="JP", transport="sal",
+                          lengthCm=Decimal("13.8"), widthCm=Decimal("8.8"), heightCm=1)
+        batch = {"mailType": "international-parcel", "parcels": [shipment]}
+        self.assertEqual(self.codes(batch), {"ROUTE_LIMITS_UNCHECKED"})
+        shipment["widthCm"] = Decimal("8.799")
+        self.assertEqual(self.codes(batch), {"ROUTE_LIMITS_UNCHECKED", "DIMENSION_LIMITS"})
+
+    def test_validate_batch_preserves_decimal_input_contract(self):
+        self.assertEqual(self.codes({"parcels": [parcel(weightKg=1.5)]}), {"PARCEL_WEIGHT"})
+        self.assertEqual(self.codes({"parcels": [parcel(weightKg=Decimal("1.5"))]}), set())
+
+    def test_ems_document_and_goods_inputs(self):
+        shipment = parcel(destinationCountry="JP", weightKg=3, contentType="documents")
+        del shipment["items"]
+        batch = {"mailType": "ems", "parcels": [shipment]}
+        self.assertEqual(self.codes(batch), set())
+        self.assertEqual(self.codes({**batch, "parcels": [
+            {**shipment, "destinationCountry": "BR", "weightKg": 1000}
+        ]}), {"ROUTE_LIMITS_UNCHECKED"})
+        shipment["items"] = [item()]
+        self.assertEqual(self.codes(batch), {"DOCUMENT_ITEMS"})
+        shipment["items"] = []
+        self.assertEqual(self.codes(batch), set())
+        shipment["contentType"] = None
+        self.assertEqual(self.codes(batch), {"CONTENT_TYPE"})
+        shipment["contentType"] = "goods"
+        shipment["items"] = [item(weightKg=Decimal("0.075"), hsCode="unverified")] * 40
+        self.assertEqual(self.codes(batch), set())
+        shipment["items"].append(item())
+        self.assertEqual(self.codes(batch), {"ITEM_COUNT"})
+
+    def test_domestic_profiles_do_not_apply_customs_rules(self):
+        shipment = parcel(domesticProfile="standard", weightKg=20, lengthCm=70, widthCm=45, heightCm=35,
+                          items=[item(hsCode=None)])
+        batch = {"mailType": "domestic-parcel", "parcels": [shipment]}
+        self.assertEqual(self.codes(batch), set())
+        shipment["domesticProfile"] = "restricted-area"
+        self.assertEqual(self.codes(batch), {"DIMENSION_LIMITS"})
+        shipment["heightCm"] = 5
+        self.assertEqual(self.codes(batch), set())
+        shipment.update(domesticProfile="indivisible", weightKg=30, lengthCm=150, widthCm=50, heightCm=25)
+        self.assertEqual(self.codes(batch), {"INDIVISIBLE_ELIGIBILITY_UNCHECKED"})
+        shipment.update(weightKg=Decimal("30.001"), heightCm=Decimal("25.001"))
+        self.assertEqual(self.codes(batch), {"INDIVISIBLE_ELIGIBILITY_UNCHECKED", "PARCEL_WEIGHT", "DIMENSION_LIMITS"})
+        shipment["domesticProfile"] = None
+        self.assertEqual(self.codes(batch), {"DOMESTIC_PROFILE"})
+        shipment.update(domesticProfile="standard", weightKg=True, widthCm="5", transport="air")
+        self.assertEqual(self.codes(batch), {"MAIL_FIELD_SCOPE", "PARCEL_WEIGHT", "DIMENSION_NUMBER"})
+
+    def test_new_service_report_rulesets(self):
+        for service in ("ems", "international-parcel", "domestic-parcel"):
+            with self.subTest(service=service):
+                result = self.run_command(str(ROOT / "examples" / f"{service}.json"))
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout),
+                                 {"ruleset": RULESETS[service], "status": "pass", "issues": []})
 
     def run_cli(self, payload):
         with tempfile.NamedTemporaryFile(

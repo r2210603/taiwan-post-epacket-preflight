@@ -1,4 +1,4 @@
-"""Package the ePacket validator as a standalone Agent Skill."""
+"""Package the postal validator as a standalone Agent Skill."""
 
 import argparse
 from io import BytesIO
@@ -11,6 +11,9 @@ FILES = (
     (f"skills/{SKILL}/SKILL.md", "SKILL.md"),
     ("preflight.py", "scripts/preflight.py"),
     ("examples/batch.json", "assets/batch.json"),
+    ("examples/ems.json", "assets/ems.json"),
+    ("examples/international-parcel.json", "assets/international-parcel.json"),
+    ("examples/domestic-parcel.json", "assets/domestic-parcel.json"),
     ("LICENSE", "LICENSE"),
 )
 

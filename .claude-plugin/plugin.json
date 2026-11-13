@@ -1,7 +1,7 @@
 {
   "name": "epacket",
-  "version": "0.1.1",
-  "description": "Offline field checks for Taiwan Post international ePacket batch JSON.",
+  "version": "0.2.0",
+  "description": "Offline batch JSON checks for Taiwan Post ePacket, EMS, international parcels, and domestic parcels.",
   "author": {
     "name": "CTG"
   },

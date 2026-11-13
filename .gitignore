@@ -17,6 +17,9 @@
 !/examples/
 /examples/*
 !/examples/batch.json
+!/examples/ems.json
+!/examples/international-parcel.json
+!/examples/domestic-parcel.json
 !/scripts/
 /scripts/*
 !/scripts/build_skill.py

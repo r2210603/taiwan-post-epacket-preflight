@@ -3,12 +3,12 @@
   "owner": {
     "name": "CTG"
   },
-  "description": "Install the Taiwan Post ePacket preflight plugin from CTG.",
+  "description": "Install the Taiwan Post shipping preflight plugin from CTG.",
   "plugins": [
     {
       "name": "epacket",
       "source": "./",
-      "description": "Offline field checks for Taiwan Post international ePacket batch JSON."
+      "description": "Offline batch JSON checks for Taiwan Post ePacket, EMS, international parcels, and domestic parcels."
     }
   ]
 }

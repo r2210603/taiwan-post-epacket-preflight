@@ -1,0 +1,12 @@
+{
+  "mailType": "domestic-parcel",
+  "parcels": [
+    {
+      "domesticProfile": "standard",
+      "weightKg": 10,
+      "lengthCm": 70,
+      "widthCm": 45,
+      "heightCm": 35
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "mailType": "ems",
+  "parcels": [
+    {
+      "destinationCountry": "JP",
+      "contentType": "goods",
+      "weightKg": 3,
+      "lengthCm": 40,
+      "widthCm": 20,
+      "heightCm": 10,
+      "items": [
+        {"name": "Synthetic cotton pouch", "quantity": 2, "unitPrice": 5, "weightKg": 0.4}
+      ]
+    }
+  ]
+}

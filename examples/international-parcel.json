@@ -1,0 +1,16 @@
+{
+  "mailType": "international-parcel",
+  "parcels": [
+    {
+      "destinationCountry": "US",
+      "transport": "air",
+      "weightKg": 5,
+      "lengthCm": 50,
+      "widthCm": 30,
+      "heightCm": 20,
+      "items": [
+        {"name": "Synthetic cotton pouch", "quantity": 3, "unitPrice": 5, "weightKg": 0.6}
+      ]
+    }
+  ]
+}

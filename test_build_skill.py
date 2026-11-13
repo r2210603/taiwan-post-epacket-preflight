@@ -34,6 +34,9 @@ class SkillBuildTests(unittest.TestCase):
             "SKILL.md": ROOT / "skills" / SKILL / "SKILL.md",
             "scripts/preflight.py": ROOT / "preflight.py",
             "assets/batch.json": ROOT / "examples" / "batch.json",
+            "assets/ems.json": ROOT / "examples" / "ems.json",
+            "assets/international-parcel.json": ROOT / "examples" / "international-parcel.json",
+            "assets/domestic-parcel.json": ROOT / "examples" / "domestic-parcel.json",
             "LICENSE": ROOT / "LICENSE",
         }
         with ZipFile(self.output) as archive:
@@ -64,6 +67,13 @@ class SkillBuildTests(unittest.TestCase):
                 report = json.loads(sample.stdout)
                 self.assertEqual(report["status"], "warn")
                 self.assertEqual(report["issues"][0]["code"], "CCC_MISSING")
+                for service in ("ems", "international-parcel", "domestic-parcel"):
+                    result = subprocess.run(
+                        runner + [str(install / "assets" / f"{service}.json")],
+                        cwd=self.scratch, env=runner_env, capture_output=True, text=True, timeout=10,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(json.loads(result.stdout)["status"], "pass", service)
                 bad = subprocess.run(
                     runner + [str(invalid)], cwd=self.scratch, env=runner_env,
                     capture_output=True, text=True, timeout=10,
